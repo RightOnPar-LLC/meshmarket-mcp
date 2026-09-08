@@ -104,6 +104,21 @@ async function cmdSignup(handle, opts) {
 }
 
 
+// Do NOT reassure someone about the thing that just failed. On a 401/403 the
+// key is precisely what did not work, and "your key is real and saved" is a lie
+// in the one case that prints it.
+//
+// Found by RUNNING proveIt() with a bad key. The unit test on isSettled() could
+// never have caught it: the predicate was right and the PROSE was wrong. That is
+// the whole argument for exercising the real function against the real service
+// and reading what it actually says.
+//
+// Pure and exported so the ratchet can hold it, with controls on both branches.
+export const failureAdvice = (status) => (status === 401 || status === 403)
+  ? ["The exchange did not recognise that key.",
+     "Mint a fresh one:  mesh signup <handle>   ·  or adopt one:  mesh init --adopt"]
+  : ["Your account and key are real and saved — that part worked."];
+
 // ── the first call — proof BEFORE the restart ───────────────────────────────
 //
 // `init` used to end by telling someone to restart their client and then go ask
@@ -190,7 +205,7 @@ async function proveIt(key) {
   // not happen, and hand over the one command that retries it.
   console.log(`\n  — first call did not settle (${err || `HTTP ${res && res.status}`}, ${secs}s).`);
   if (b && b.error) console.log(`    the exchange said: ${String(b.error).slice(0, 140)}`);
-  console.log(`    Your account and key are real and saved — that part worked.`);
+  for (const line of failureAdvice(res && res.status)) console.log("    " + line);
   console.log(`    Retry it any time:  mesh call ${FIRST_CALL.slug} --input '${JSON.stringify(FIRST_CALL.input)}'`);
   console.log(`    Not proof of anything broken on your side; nothing was charged.`);
   return false;

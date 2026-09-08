@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { maskKey, redactKey, slugify, parseArgs, isSettled } from "../bin/mesh.mjs";
+import { maskKey, redactKey, slugify, parseArgs, isSettled, failureAdvice } from "../bin/mesh.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SRC = readFileSync(join(HERE, "..", "bin", "mesh.mjs"), "utf8");
@@ -29,7 +29,7 @@ const CODE = SRC.split("\n")
   .map((l) => l.replace(/^\s*\/\/.*$/, "").replace(/([^:"'`])\/\/.*$/, "$1"))
   .join("\n");
 
-const MIN_INVARIANTS = 27;
+const MIN_INVARIANTS = 31;
 let pass = 0;
 const fails = [];
 const ok = (name, cond) => { if (cond) { pass++; console.log("  ✓ " + name); } else { fails.push(name); console.error("  ✗ " + name); } };
@@ -120,6 +120,19 @@ ok("the first call gets a longer ceiling than api()'s 25s",
 
 ok("the first call buys from creator-os, not from the house",
   /thinkzone-api/.test(CODE) && /structured-extract/.test(CODE));
+
+
+// Never reassure someone about the exact thing that just failed.
+ok("a rejected key is NOT told its key is real",
+  failureAdvice(401).join(" ").includes("did not recognise") &&
+  !failureAdvice(401).join(" ").includes("are real and saved"));
+ok("403 is treated as an auth failure too",
+  failureAdvice(403).join(" ").includes("did not recognise"));
+ok("[control] a server-side failure DOES reassure - the key really is fine there",
+  failureAdvice(500).join(" ").includes("are real and saved") &&
+  !failureAdvice(500).join(" ").includes("did not recognise"));
+ok("[control] a network failure (no status) reassures rather than blaming the key",
+  failureAdvice(undefined).join(" ").includes("are real and saved"));
 
 // ── Result ──────────────────────────────────────────────────────────────────
 const total = pass + fails.length;
