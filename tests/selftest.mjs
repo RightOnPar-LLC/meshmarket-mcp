@@ -29,7 +29,7 @@ const CODE = SRC.split("\n")
   .map((l) => l.replace(/^\s*\/\/.*$/, "").replace(/([^:"'`])\/\/.*$/, "$1"))
   .join("\n");
 
-const MIN_INVARIANTS = 31;
+const MIN_INVARIANTS = 33;
 let pass = 0;
 const fails = [];
 const ok = (name, cond) => { if (cond) { pass++; console.log("  ✓ " + name); } else { fails.push(name); console.error("  ✗ " + name); } };
@@ -133,6 +133,15 @@ ok("[control] a server-side failure DOES reassure - the key really is fine there
   !failureAdvice(500).join(" ").includes("did not recognise"));
 ok("[control] a network failure (no status) reassures rather than blaming the key",
   failureAdvice(undefined).join(" ").includes("are real and saved"));
+
+
+// An explicit adopt must not be silently overridden by a stale saved key - the
+// person adopting is usually the person whose saved key just stopped working.
+ok("an explicit adopt wins over a saved key",
+  /const adoptionRequested = !!process\.env\.MESH_AGENT_KEY \|\| "adopt" in opts;/.test(CODE) &&
+  /let key = adoptionRequested \? null : loadKey\(\);/.test(CODE));
+ok("[control] with no adoption requested, the saved key is still used",
+  /adoptionRequested \? null : loadKey\(\)/.test(CODE));
 
 // ── Result ──────────────────────────────────────────────────────────────────
 const total = pass + fails.length;

@@ -423,7 +423,18 @@ async function adoptKey(key) {
 
 async function cmdInit(opts) {
   const dry = "dry-run" in opts;
-  let key = loadKey();
+  // A saved key normally wins - but NOT over an explicit request to adopt a
+  // different one. MESH_AGENT_KEY in the environment, or --adopt, is someone
+  // saying "use THIS key", and the state they are almost always in when they
+  // say it is that the saved one stopped working.
+  //
+  // Before this, loadKey() ran first and won unconditionally, so adoption
+  // silently no-opped and init went on to wire the client with the DEAD key -
+  // then printed "already wired", a success line for a broken config. Measured
+  // 2026-09-07 on a real machine: a rejected @npx-smoketest key survived an
+  // adopt and got written into Cursor. The only way through was mesh logout.
+  const adoptionRequested = !!process.env.MESH_AGENT_KEY || "adopt" in opts;
+  let key = adoptionRequested ? null : loadKey();
   let handle = key ? credHandle() : null;
 
   // A saved key wins. Then MESH_AGENT_KEY from the environment (never argv —
