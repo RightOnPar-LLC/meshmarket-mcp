@@ -103,6 +103,99 @@ async function cmdSignup(handle, opts) {
   console.log(`Starter balance: ${r.body.credits ?? "?"} MESH`);
 }
 
+
+// ── the first call — proof BEFORE the restart ───────────────────────────────
+//
+// `init` used to end by telling someone to restart their client and then go ask
+// it to discover capabilities. That defers the moment anything visibly WORKS
+// past an app restart, which is the highest drop-off point in the whole flow.
+// Measured 2026-09-07: 168 npm pulls in a month against 4 external accounts
+// EVER. People take the connector and never become participants.
+//
+// So the onboard now closes the loop itself: discover -> buy -> execute ->
+// PROVE -> pay, on their machine, in the first thirty seconds, before they have
+// decided anything. It is roadmap item #1 collapsed into onboarding instead of
+// staged as a demo someone has to go find.
+//
+// It calls CREATOR-OS. `structured-extract` is supplied by thinkzone-api
+// (creator-os/services/thinkzone-api/mesh.json), so the first thing a stranger
+// ever sees the exchange do is deliver another one of our own products through
+// it — the platform buying from the platform, in public, for 2 MESH.
+//
+// THE RULE THIS THING LIVES BY: it may not claim success without a settled
+// receipt. Not "sent", not "200", not "no error" — a `charged` figure and a
+// result. Everything else prints as what it is and the account still counts as
+// created, because it was. An onboard that lies about the first call is worse
+// than one that never tried.
+// Settled means SETTLED, and it is a pure function so the ratchet can prove it
+// with negative controls. A 200 is not a sale. An empty body is not a sale. A
+// charge with no result is not a sale, and a result with no charge is a freebie
+// we did not mean to give — neither may be reported as the loop closing.
+export const isSettled = (b) =>
+  !!(b && typeof b === "object" && b.result !== undefined && b.charged !== undefined);
+
+const FIRST_CALL = {
+  slug: "structured-extract",
+  provider: "creator-os · thinkzone-api",
+  price_hint: 2,
+  input: {
+    text: "Ada Lovelace published her notes on the Analytical Engine in London in 1843.",
+    shape: { person: "string", city: "string", year: "number" },
+  },
+};
+
+// A deliberately longer ceiling than api()'s 25s. This one call is model-backed
+// and runs once; a 25s abort here would report a working exchange as broken,
+// which is the exact false-alarm this file is trying not to ship.
+const FIRST_CALL_CEILING = 60000;
+
+async function proveIt(key) {
+  console.log(`\nProving it now — one real call, so you see it work before you restart anything.`);
+  console.log(`  ${FIRST_CALL.slug}  (${FIRST_CALL.provider})  ~${FIRST_CALL.price_hint} MESH`);
+
+  const t0 = Date.now();
+  let res = null, err = null;
+  try {
+    const r = await fetch(`${BASE}/api/call/${encodeURIComponent(FIRST_CALL.slug)}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-agent-key": key },
+      body: JSON.stringify({ input: FIRST_CALL.input }),
+      signal: AbortSignal.timeout(FIRST_CALL_CEILING),
+    });
+    try { res = { status: r.status, body: await r.json() }; }
+    catch { res = { status: r.status, body: null }; }
+  } catch (e) {
+    err = (e.name === "TimeoutError" || e.name === "AbortError")
+      ? `no answer within ${FIRST_CALL_CEILING / 1000}s`
+      : `network error: ${e.message}`;
+  }
+  const secs = ((Date.now() - t0) / 1000).toFixed(1);
+
+  // Settled means SETTLED: a charge and a result, both present. A 200 with no
+  // receipt is not a sale, and an error body is UNKNOWN, never a proven failure
+  // of the capability itself.
+  const b = res && res.body;
+  const settled = isSettled(b);
+
+  if (settled) {
+    console.log(`\n  ✓ settled in ${secs}s — charged ${b.charged} MESH, balance ${b.balance ?? "?"}`);
+    console.log(`\n  in:   ${FIRST_CALL.input.text}`);
+    console.log(`  out:  ${JSON.stringify(b.result)}`);
+    console.log(`\n  That is the whole loop: discovered, bought, executed, proved, paid.`);
+    console.log(`  Your agent can do that with any capability on the shelf:  mesh discover`);
+    return true;
+  }
+
+  // Fail honestly and specifically. The account exists; say so, say what did
+  // not happen, and hand over the one command that retries it.
+  console.log(`\n  — first call did not settle (${err || `HTTP ${res && res.status}`}, ${secs}s).`);
+  if (b && b.error) console.log(`    the exchange said: ${String(b.error).slice(0, 140)}`);
+  console.log(`    Your account and key are real and saved — that part worked.`);
+  console.log(`    Retry it any time:  mesh call ${FIRST_CALL.slug} --input '${JSON.stringify(FIRST_CALL.input)}'`);
+  console.log(`    Not proof of anything broken on your side; nothing was charged.`);
+  return false;
+}
+
 // ── mesh key — reveal or mask the saved key ─────────────────────────────────
 // `--show` is gated on a real TTY: if stdout is a pipe, a file, or an agent
 // harness capturing output, printing the key would put it somewhere permanent
@@ -385,6 +478,7 @@ async function cmdInit(opts) {
   if (!dry && changed) {
     if (key) {
       console.log(`\nDone. ${changed} client${changed > 1 ? "s" : ""} wired with @${handle || credHandle()}'s key — paid calls settle in MESH.`);
+      if (!("no-prove" in opts)) await proveIt(key);
       console.log(`Restart the client you use, then ask it: "discover capabilities on MeshMarket".`);
     } else {
       console.log(`\nDone. ${changed} client${changed > 1 ? "s" : ""} wired keyless — browsing and search work now.`);
@@ -428,6 +522,7 @@ const HELP = `mesh — the MeshMarket CLI (${BASE})
       touches. Free, no card, no form.
 
     --dry-run      Show what it would change. Touches nothing, mints nothing.
+  --no-prove            skip the first real call at the end of init
     --adopt        Already have a key? Paste it when asked (never via argv).
     --handle <n>   Pick your node name instead of getting a generated one.
     --keyless      Wire browse-only; don't create an account.

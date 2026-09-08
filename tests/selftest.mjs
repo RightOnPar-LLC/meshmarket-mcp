@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { maskKey, redactKey, slugify, parseArgs } from "../bin/mesh.mjs";
+import { maskKey, redactKey, slugify, parseArgs, isSettled } from "../bin/mesh.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SRC = readFileSync(join(HERE, "..", "bin", "mesh.mjs"), "utf8");
@@ -29,7 +29,7 @@ const CODE = SRC.split("\n")
   .map((l) => l.replace(/^\s*\/\/.*$/, "").replace(/([^:"'`])\/\/.*$/, "$1"))
   .join("\n");
 
-const MIN_INVARIANTS = 17;
+const MIN_INVARIANTS = 27;
 let pass = 0;
 const fails = [];
 const ok = (name, cond) => { if (cond) { pass++; console.log("  ✓ " + name); } else { fails.push(name); console.error("  ✗ " + name); } };
@@ -85,8 +85,47 @@ ok("a dry-run prints the config SHAPE with the key redacted, never raw",
 ok("the CLI is import-safe: main() runs only when invoked directly",
   /invokedDirectly/.test(CODE) && /if \(invokedDirectly\) main\(\)/.test(CODE));
 
+// ── the first call must not lie ─────────────────────────────────────────────
+// `init` now ends by making one real, paid call so a newcomer sees the loop
+// close before restarting anything. The only thing that makes that safe is
+// that it CANNOT report success without a settled receipt. These are the
+// controls for that, written as a pair: one proving it accepts a real sale,
+// several proving it rejects every shape that merely looks like one.
+// (SRC is already read at the top of this file.)
+
+ok("a real receipt (result + charged) counts as settled",
+  isSettled({ result: { person: "Ada Lovelace" }, charged: 2, balance: 98 }) === true);
+
+// NEGATIVE CONTROLS - each of these is a way the onboard could claim the
+// economy works when it did not.
+ok("[control] an empty 200 body is NOT settled", isSettled({}) === false);
+ok("[control] null/undefined is NOT settled", isSettled(null) === false && isSettled(undefined) === false);
+ok("[control] a charge with no result is NOT settled", isSettled({ charged: 2 }) === false);
+ok("[control] a result with no charge is NOT settled", isSettled({ result: { a: 1 } }) === false);
+ok("[control] an error body is NOT settled", isSettled({ error: "unauthorized" }) === false);
+
+// A dry run is a rehearsal. It must never spend someone's MESH, and it must
+// never mint an account - both are irreversible from the newcomer's side.
+ok("a dry run never makes the first call",
+  /if \(dry\)/.test(CODE) && !/dry[\s\S]{0,200}await proveIt/.test(CODE));
+
+ok("the first call is skippable with --no-prove",
+  /\(!\("no-prove" in opts\)\) await proveIt/.test(CODE));
+
+// The ceiling matters: api() aborts at 25s, and this call is model-backed. A
+// 25s abort would report a WORKING exchange as broken - the exact false alarm
+// that gets a check deleted.
+ok("the first call gets a longer ceiling than api()'s 25s",
+  /FIRST_CALL_CEILING = (\d+)/.test(CODE) && Number(RegExp.$1) > 25000);
+
+ok("the first call buys from creator-os, not from the house",
+  /thinkzone-api/.test(CODE) && /structured-extract/.test(CODE));
+
 // ── Result ──────────────────────────────────────────────────────────────────
 const total = pass + fails.length;
+
+
+
 console.log(`\nmesh-connector security selftest — ${pass}/${total} passing (ratchet floor ${MIN_INVARIANTS})`);
 if (fails.length) { console.error(`\n${fails.length} FAILED:\n  ` + fails.join("\n  ")); process.exit(1); }
 if (total < MIN_INVARIANTS) { console.error(`\nRATCHET VIOLATION: ${total} invariants, floor is ${MIN_INVARIANTS}. The floor only goes up.`); process.exit(1); }
