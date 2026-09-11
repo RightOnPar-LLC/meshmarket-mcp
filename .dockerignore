@@ -1,0 +1,17 @@
+# R4: the BUILD CONTEXT root must have one — this repo root IS the context.
+# R5: secret patterns use the `**/` form. A bare `.env` matches ONLY the context
+# root, so nested copies still ship; measured in meshmarket, where the bare form
+# put .env.local into /app.
+**/.env
+**/.env.*
+**/secrets.env
+**/*.pem
+**/*.key
+**/id_rsa
+**/client_secret*.json
+
+# Not secrets, just weight and noise.
+**/node_modules
+.git
+**/.DS_Store
+**/*.log
