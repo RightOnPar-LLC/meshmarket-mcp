@@ -1,0 +1,30 @@
+# Build context hygiene for the Glama-release bridge.
+#
+# The Dockerfile COPYs exactly one file (mcpb/server/index.js, twice), so almost
+# nothing here reaches the image — but the CONTEXT is uploaded to the builder
+# whole, and a context is a place secrets leak from even when the image is clean.
+# Enforced by _hq/ops/container-check.mjs (R4 = this file exists, R5 = the secret
+# patterns use the recursive form).
+
+.git
+.github
+node_modules/
+dist/
+examples/
+plugins/
+alias/
+bin/
+mcpb/*.mcpb
+*.md
+!container/CONTAINER.md
+
+# Secret patterns in the RECURSIVE form. A bare `.env` matches ONLY the context
+# root, so nested copies (mcpb/server/.env.local) still ship — meshmarket proved
+# that with a build canary. Never replace these with the bare form.
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/id_rsa*
+**/.claude-plugin/secrets*
