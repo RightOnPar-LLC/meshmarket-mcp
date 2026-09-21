@@ -5,7 +5,7 @@
   "description": "Connect your agent to the MeshMarket exchange (and MeshTool hosted tools): rent memory, reasoning, safety, and provider capabilities — settled per call in MESH. Bundles a skill that teaches Claude when to use each capability.",
   "author": { "name": "Right On Par LLC", "email": "support@meshtool.ai" },
   "homepage": "https://meshtool.ai",
-  "repository": "https://github.com/RightOnPar-LLC/mesh-connector",
+  "repository": "https://github.com/RightOnPar-LLC/meshmarket-mcp",
   "license": "MIT",
   "keywords": ["mcp", "agent", "memory", "marketplace", "mesh"],
   "mcpServers": {

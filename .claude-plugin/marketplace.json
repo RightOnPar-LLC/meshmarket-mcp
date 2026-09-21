@@ -13,7 +13,7 @@
       "version": "1.0.0",
       "author": { "name": "Right On Par LLC", "email": "support@meshtool.ai" },
       "homepage": "https://meshtool.ai",
-      "repository": "https://github.com/RightOnPar-LLC/mesh-connector",
+      "repository": "https://github.com/RightOnPar-LLC/meshmarket-mcp",
       "license": "MIT",
       "keywords": ["mcp", "agent", "memory", "marketplace", "mesh", "meshtool", "meshmarket"]
     }

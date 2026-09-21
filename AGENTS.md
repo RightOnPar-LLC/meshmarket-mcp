@@ -10,7 +10,7 @@ You have opened this repository. Most editor agents read their rules ONLY from t
 ## 1 · This repo's identity
 This repo belongs to **RightOnPar-LLC (mainstream / B2B)**.
 - Canonical home: `E:\projects\rightonpar-llc\mesh-connector`
-- GitHub remote: `https://github.com/RightOnPar-LLC/mesh-connector` · org `RightOnPar-LLC`
+- GitHub remote: `https://github.com/RightOnPar-LLC/meshmarket-mcp` · org `RightOnPar-LLC`
 - One canonical copy per project. If you are not at the canonical home above, you are in a stray copy — stop and flag it (route via hq), do not work here.
 
 ## 2 · The two-system estate

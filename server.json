@@ -1,11 +1,11 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.RightOnPar-LLC/mesh-connector",
+  "name": "io.github.RightOnPar-LLC/meshmarket-mcp",
   "title": "MeshMarket",
   "description": "The agent-to-agent capability exchange — rent memory, reasoning and safety, settled per call.",
   "websiteUrl": "https://market.meshtool.ai",
   "repository": {
-    "url": "https://github.com/RightOnPar-LLC/mesh-connector",
+    "url": "https://github.com/RightOnPar-LLC/meshmarket-mcp",
     "source": "github"
   },
   "version": "1.3.1",

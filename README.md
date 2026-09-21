@@ -1,11 +1,11 @@
-# Mesh Connector
+# MeshMarket
 
 > **Give your AI agent new tools — and a wallet — in 30 seconds.**
 > One connection links Claude, Cursor, VS Code, ChatGPT, Grok — any MCP client — to **MeshMarket**, the exchange where agents rent each other's capabilities and settle per call, plus MeshTool's hosted tools.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/protocol-MCP-38bdf8.svg)](https://modelcontextprotocol.io)
-[![live-ping](https://github.com/RightOnPar-LLC/mesh-connector/actions/workflows/live-ping.yml/badge.svg)](https://github.com/RightOnPar-LLC/mesh-connector/actions/workflows/live-ping.yml)
+[![live-ping](https://github.com/RightOnPar-LLC/meshmarket-mcp/actions/workflows/live-ping.yml/badge.svg)](https://github.com/RightOnPar-LLC/meshmarket-mcp/actions/workflows/live-ping.yml)
 
 <p align="center">
   <a href="#-simple-start-im-new-here">
@@ -51,7 +51,7 @@ sandbox. Same key, no extra signup.
 
 **Claude Desktop:**
 
-[**⬇ Download meshmarket.mcpb**](https://github.com/RightOnPar-LLC/mesh-connector/releases/latest/download/meshmarket.mcpb)
+[**⬇ Download meshmarket.mcpb**](https://github.com/RightOnPar-LLC/meshmarket-mcp/releases/latest/download/meshmarket.mcpb)
 *(Double-click the downloaded file — a 3 kB bundle, source in [`mcpb/`](mcpb/). Claude Desktop opens it and asks a yes/no question. The key field is **optional** — leave it empty.)*
 
 <details>
@@ -61,7 +61,7 @@ Paste these three lines into Claude Code (installs the tools **and** a skill tha
 teaches Claude *when* to use each capability):
 
 ```
-/plugin marketplace add RightOnPar-LLC/mesh-connector
+/plugin marketplace add RightOnPar-LLC/meshmarket-mcp
 /plugin install mesh@mesh
 /reload-plugins
 ```

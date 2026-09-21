@@ -395,7 +395,7 @@ async function cmdInit(opts) {
     // the repo page. People install through npm and a pasted MCP URL, so they
     // never pass the page where a star or an issue would come from. One line at
     // the moment it just worked is the only place that funnel touches them.
-    console.log(`\nIf this saved you time, a star helps people find it: https://github.com/RightOnPar-LLC/mesh-connector`);
+    console.log(`\nIf this saved you time, a star helps people find it: https://github.com/RightOnPar-LLC/meshmarket-mcp`);
   }
 }
 
