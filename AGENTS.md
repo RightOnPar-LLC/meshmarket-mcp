@@ -1,60 +1,60 @@
+# AGENTS.md
 
+Guidance for AI coding agents (Claude Code, Cursor, Copilot, Codex, and others)
+working in this repository.
 
-<!-- ESTATE-DOOR:BEGIN — managed by the governance engine (governance-sync). Do not hand-edit; edit the master laws file and re-run sync. -->
-# Editor-agent door — mesh-connector
+## What this repo is
 
-> Machine-generated operating contract for any editor agent (Cursor, VS Code Copilot, Codex, Claude Code, or any tool that reads `AGENTS.md` / `.github/copilot-instructions.md`). Door fingerprint `34a663df9b677ad3`. Source of truth: `E:\projects\_hq\LAWS.md`.
+`meshmarket-mcp` is the connector for **MeshMarket** (https://market.meshtool.ai),
+the agent-to-agent capability exchange from RightOnPar LLC. It contains:
 
-You have opened this repository. Most editor agents read their rules ONLY from this file and never walk up to the estate's machine-global laws — so the operating contract you need is written here in full. Read it before you act.
+- `bin/mesh.mjs` - the `mesh` CLI (published to npm as `mesh-connector` /
+  `meshmarket`). Zero runtime dependencies, Node 18+.
+- `examples/` - ready-to-paste MCP client configs.
+- `mcpb/` - the Claude Desktop bundle source.
+- `plugins/`, `.claude-plugin/` - the Claude Code plugin and marketplace manifest.
+- `server.json`, `glama.json` - MCP registry metadata.
+- `container/`, `Dockerfile` - container packaging.
+- `tests/selftest.mjs` - the self-test suite.
+- `tools/distribution-gate.mjs` - pre-publish checks on what ships.
 
-## 1 · This repo's identity
-This repo belongs to **RightOnPar-LLC (mainstream / B2B)**.
-- Canonical home: `E:\projects\rightonpar-llc\mesh-connector`
-- GitHub remote: `https://github.com/RightOnPar-LLC/meshmarket-mcp` · org `RightOnPar-LLC`
-- One canonical copy per project. If you are not at the canonical home above, you are in a stray copy — stop and flag it (route via hq), do not work here.
+The hosted MCP endpoint itself (`https://market.meshtool.ai/mcp`) is not in this
+repo; this repo is the client side and the install surfaces.
 
-## 2 · The two-system estate
-This machine runs a two-system estate with a hard separation. Route every unit of work to its own system:
-- **RightOnPar-LLC** — the mainstream / B2B system (GitHub org `RightOnPar-LLC`; also its think-zone / drydockwetdock secure-forked lane and the MeshTool lane). Home under `E:\projects\`.
-- **thesteelezone / steele-os** — the ADULT vertical, RING-FENCED (repo family under `thesteelezone` / `the-steele-zone`).
-Adult work lives in the steele system ONLY and never flows into a RightOnPar-LLC repo.
+## Build and test
 
-## 3 · The ring-fence
-This is a **mainstream (non-adult)** repo. The estate contains a ring-fenced ADULT vertical (steele-os / thesteelezone) kept strictly separate. From here that means: never pull adult content, assets, or data into this repo; never reference or mirror steele material; keep this repo SFW. Adult work belongs in the steele system, never here.
+There is no build step.
 
-## 4 · The four hard floors (never automatic — a human signs)
-Everything else: default to action. These four are the only things you never do on your own:
-1. **Money-out** — spending, transfers, trades, moving funds or assets.
-2. **Outward publish / send** — posting, publishing, or sending anything to the outside world on the owner's behalf.
-3. **Credential / ACL changes to people** — granting or changing another person's access, secrets, or permissions.
-4. **Irreversible deletes** — hard-deleting data, history, or resources.
+```sh
+npm test            # distribution gate + self-test
+node tests/selftest.mjs
+node bin/mesh.mjs --help
+```
 
-## 5 · Secrets & the vault
-Secrets live ONLY in `C:\Users\vipth\.vault\secrets.env`. Never hardcode a secret, never commit one, never write a plaintext copy into this repo. If a key is missing, self-heal from the vault — do not invent one and do not stop to ask. Nothing secret belongs in a tracked file.
+Run `npm test` before opening a pull request. CI runs the same checks.
 
-## 6 · Before you build
-- **Claim before you build** — claim the work on the hq claim board so two agents don't collide.
-- **Everything lands** — finish to destination (merged + deployed + verified) or log the loose end in the OWNING system's `OPEN-LOOPS.md` with a next step.
-- **Route before create** — a new folder/repo/app goes through hq `idea_route` first; nothing new on `C:`.
+## Conventions
 
-<!-- ESTATE-LAWS:BEGIN — managed by the governance engine (governance-sync). Do not hand-edit; edit the master laws file and re-run sync. -->
-> **THE LAWS** (source of truth: `E:\projects\_hq\LAWS.md`). This block is machine-synced — fingerprint `213e8bdc04940be3`.
->
-> **LAW 1 — The prime directive** (DW, 2026-07-15)
-> **LAW 2 — One brain, shared thoughts** (DW, 2026-07-15)
-> **LAW 3 — Build, borrow, or blend** (DW, 2026-07-15)
-> **LAW 4 — Orient continuously, not just at the start** (DW, 2026-07-20)
-> **LAW 5 — Keep brain and git lined up** (DW, 2026-07-20)
-> **LAW 6 — The pre-flight, every single input** (DW, 2026-07-20)
-> **LAW 7 — No signature rots** (DW, 2026-07-25)
-> **LAW 8 — Proof over promises** (DW, 2026-08-05)
-> **LAW 9 — Browse in the cloud; local hands only when they must be yours** (DW, 2026-08-20)
-> **LAW 10 — Adult never lands in mainstream; adult stays local** (DW, 2026-08-23)
-> **LAW 11 — The velvet rope** (DW, 2026-09-05)
->
-> Full text + rationale for each law is in the master (`E:\projects\_hq\LAWS.md`). If this block and the master disagree, the master wins and this surface is drifting — re-run the governance sync.
-<!-- ESTATE-LAWS:END -->
+- Keep the CLI dependency-free. Do not add runtime dependencies to `package.json`.
+- Target Node 18+ and ES modules (`.mjs`, `"type": "module"`).
+- `mesh init` edits users' MCP client config files: keep it merge-only, keep the
+  backup it writes, and keep `--dry-run` working.
+- Tests are a ratchet: when you fix a bug, add the assertion that would have
+  caught it. Do not delete or weaken existing assertions to make a change pass.
+- Match the style of the surrounding code (naming, comment density, error
+  handling).
+- Docs must be accurate. Do not describe something as tested, live, or done
+  unless it is.
+- MESH is a closed-loop usage credit (spend-only, not cash, not crypto). Describe
+  it that way in any docs or copy.
 
-## About this file
-Machine-generated by the estate governance engine (editor-doors surface class). The master is `E:\projects\_hq\LAWS.md`. To change the laws or this door, edit the master (or the door template) and run `npm run govern:sync` from `E:\projects\_hq` — do NOT hand-edit between the `ESTATE-DOOR` markers; any content OUTSIDE the markers is yours to keep.
-<!-- ESTATE-DOOR:END -->
+## Secrets
+
+- Never commit secrets, API keys, agent keys (`agk_...`), tokens, or credentials.
+- Use placeholders such as `YOUR_AGENT_KEY` in examples and docs.
+- Do not commit local machine paths or personal configuration.
+
+## Security
+
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Contact: support@meshtool.ai.
